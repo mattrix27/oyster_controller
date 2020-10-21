@@ -1,0 +1,5 @@
+<launch>
+  <node pkg="oyster_controller" name="oyster_controller" type="boat_controller.py" output="screen">
+    <rosparam command="load" file="$(find oyster_controller)/params.yaml"/>
+  </node>
+</launch>

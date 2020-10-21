@@ -1,0 +1,16 @@
+imu_topic: "/sensors/imu"
+
+flip_pos_topic: "/boat_controller/flip/flip_pos"
+flip_start_topic: "/boat_controller/flip/arduino/start"
+flip_done_topic: "/boat_controller/flip/arduino/done"
+
+flip_navigation_topic: "/boat_controller/navigation"
+
+mode_topic: "/boat_controller/mode"
+
+speed_tolerance: 10
+
+flip_count: 10
+path_count: 10
+
+

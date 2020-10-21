@@ -31,10 +31,13 @@ int close_angle = 170;
 
 std_msgs::Bool flipped_msg;
 Servo servo;
+ros::NodeHandle nh;
+ros::Publisher pub("/boat_controller/flip/arduino/done", &flipped_msg);
 
 void flip(){
   servo.write(close_angle);
   delay(2000);
+  nh.spinOnce();
 
   digitalWrite(act_ext_pin, LOW);
   digitalWrite(act_ret_pin, HIGH);
@@ -42,7 +45,8 @@ void flip(){
   digitalWrite(act_ext_pin, HIGH);
   digitalWrite(act_ret_pin, HIGH);
   delay(1000);
-
+  nh.spinOnce();
+  
   //CHECK CURRENT
 
   digitalWrite(act_ext_pin, LOW);
@@ -51,6 +55,7 @@ void flip(){
   digitalWrite(act_ext_pin, HIGH);
   digitalWrite(act_ret_pin, HIGH);
   delay(1000);
+  nh.spinOnce();
 
   servo.write(open_angle);
   delay(2000);
@@ -61,6 +66,7 @@ void flip(){
   digitalWrite(act_ext_pin, HIGH);
   digitalWrite(act_ret_pin, HIGH);
   delay(1000);
+  nh.spinOnce();
 }
 
 void actuator_test(){
@@ -81,8 +87,6 @@ void actuator_test(){
 //  delay(1000);
 }
 
-ros::Publisher pub("flip_done", &flipped_msg);
-
 void flip_cb( const std_msgs::Bool& cmd_msg){
   flip();
   
@@ -92,13 +96,13 @@ void flip_cb( const std_msgs::Bool& cmd_msg){
 }
 
 
-ros::NodeHandle nh;
-ros::Subscriber<std_msgs::Bool> sub("flipper_start", flip_cb);
+ros::Subscriber<std_msgs::Bool> sub("/boat_controller/flip/arduino/start", flip_cb);
 
 
 void setup(){
   nh.initNode();
   nh.subscribe(sub);
+  nh.advertise(pub);
   
   servo.attach(9); //attach it to pin 9
   pinMode(act_ext_pin, OUTPUT);

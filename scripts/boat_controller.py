@@ -9,18 +9,16 @@ from bag_detection.msg import FlipPos
 
 class BoatController:
 
-    IMU_TOPIC        = rospy.get_param("oyster_controller/imu")
+    IMU_TOPIC        = rospy.get_param("oyster_controller/imu_topic")
     BAG_POS_TOPIC    = rospy.get_param("oyster_controller/flip_pos_topic")
-    FLIPPER_TOPIC    = rospy.get_param("oyster_controller/flipper_start")
-    FLIP_DONE_TOPIC  = rospy.get_param("oyster_controller/flip_done")
-    DRIVE_TOPIC      = rospy.get_param("oyster_controller/flip_navigation")
-    MODE_TOPIC       = rospy.get_param("oyster_controller/mode")
+    FLIP_START_TOPIC = rospy.get_param("oyster_controller/flip_start_topic")
+    FLIP_DONE_TOPIC  = rospy.get_param("oyster_controller/flip_done_topic")
+    DRIVE_TOPIC      = rospy.get_param("oyster_controller/flip_navigation_topic")
+    MODE_TOPIC       = rospy.get_param("oyster_controller/mode_topic")
 
     SPEED_TOL        = rospy.get_param("oyster_controller/speed_tolerance")
-    COUNTER          = rospy.get_param("oyster_controller/counter")
-    
-    FLIP_ALIGN_TOPIC = rospy.get_param("oyster_controller/flip_align")
-    MODE_TOPIC       = rospy.get_param("oyster_controller/mode")
+    FLIP_COUNT       = rospy.get_param("oyster_controller/flip_count")
+    PATH_COUNT       = rospy.get_param("oyster_controller/path_count")   
 
 
     def __init__(self):
@@ -30,11 +28,11 @@ class BoatController:
 
 
         # self.drive_pub = rospy.Publisher(self.DRIVE_TOPIC, UInt16, queue_size=5)
-        self.flip_pub = rospy.Publisher(self.FLIPPER_TOPIC, Bool, queue_size=5)
+        self.flip_pub = rospy.Publisher(self.FLIP_START_TOPIC, Bool, queue_size=5)
         self.mode_pub = rospy.Publisher(self.MODE_TOPIC, UInt16, queue_size=5)
 
-	    self.current_speed = 0
-	    self.flip_counter = 0
+        self.current_speed = 0
+        self.flip_counter = 0
         self.path_counter = 0
         self.MODE = 0 #0: Align Bag, 1: FLipping, 2: FLip Check, 3. Next Bag, 4: Check Path, 5: Next Row
 
@@ -43,7 +41,7 @@ class BoatController:
 
         # drive_msg = 
         if self.MODE != 1:
-            if data.top_y < 480 or if data.bot_y < 480:
+            if data.top_y < 480 or data.bot_y < 480:
                 self.path_counter = 0
                 if self.MODE == 3 or self.MODE == 5: 
                     self.MODE = 0
@@ -54,11 +52,10 @@ class BoatController:
                     self.bag_align(data)
             else:
                 self.path_counter += 1
-                if self.path_counter > 10:
+                if self.path_counter > self.PATH_COUNT:
                     self.path_counter = 0
                     self.MODE = 4
                     self.mode_pub.publish(self.MODE)
-
         
 
     def bag_align(self, data):
@@ -76,10 +73,11 @@ class BoatController:
             # TODO: ALIGN TO BAG DRIVE COMMAND
             self.flip_counter = 0 
 
-        if self.flip_counter > 10 and self.current_speed < self.SPEED_TOL:
+        if self.flip_counter > self.FLIP_COUNT and self.current_speed < self.SPEED_TOL:
+            print("FLIPPING")
             self.flip_counter = 0
             self.MODE = 1
-            self.flip_pub(True)
+            self.flip_pub.publish(True)
 
         # self.drive_pub.publish(drive_msg)
 
@@ -91,12 +89,14 @@ class BoatController:
             self.flip_counter = 0
 
         if self.flip_counter > 10 and self.current_speed < self.SPEED_TOL:
+            print("FLIPPED")
             self.flip_counter = 0
             self.MODE = 3
-            self.mode_pub.publish.publish(self.MODE) 
+            self.mode_pub.publish(self.MODE) 
 
 
     def flip_done_callback(self, data):
+        print("CHECK FLIP")
         self.MODE = 2
         self.mode_pub.publish(self.MODE)
 
@@ -106,6 +106,6 @@ class BoatController:
 
 
 if __name__ == "__main__":
-    rospy.init_node('FlipFollower')
-    flipFollower = FlipFollower()
+    rospy.init_node('BoatController')
+    BoatController = BoatController()
     rospy.spin()
