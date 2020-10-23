@@ -34,39 +34,77 @@ Servo servo;
 ros::NodeHandle nh;
 ros::Publisher pub("/boat_controller/flip/arduino/done", &flipped_msg);
 
-void flip(){
-  servo.write(close_angle);
-  delay(2000);
-  nh.spinOnce();
-
-  digitalWrite(act_ext_pin, LOW);
-  digitalWrite(act_ret_pin, HIGH);
-  delay(2000);
-  digitalWrite(act_ext_pin, HIGH);
-  digitalWrite(act_ret_pin, HIGH);
-  delay(1000);
-  nh.spinOnce();
+void wait_blocked(int duration, int frame=1000){
+  int rem_dur = duration;
+  while (rem_dur > frame) {
+    nh.spinOnce();
+    delay(frame);
+    rem_dur = rem_dur - frame;
+  }
   
-  //CHECK CURRENT
+  nh.spinOnce();
+  delay(rem_dur);
+}
 
+void wait(unsigned long duration){
+  unsigned long start = millis();
+  while (millis() - start < duration) {
+    nh.spinOnce();
+  }
+}
+
+void ret_actuator(unsigned long duration){
   digitalWrite(act_ext_pin, LOW);
   digitalWrite(act_ret_pin, HIGH);
-  delay(6000);
-  digitalWrite(act_ext_pin, HIGH);
-  digitalWrite(act_ret_pin, HIGH);
-  delay(1000);
-  nh.spinOnce();
+  wait(duration);
+}
 
-  servo.write(open_angle);
-  delay(2000);
-
+void ext_actuator(unsigned long duration){
   digitalWrite(act_ext_pin, HIGH);
   digitalWrite(act_ret_pin, LOW);
-  delay(5000);
+  wait(duration);
+}
+
+void brake_actuator(unsigned long duration){
   digitalWrite(act_ext_pin, HIGH);
   digitalWrite(act_ret_pin, HIGH);
-  delay(1000);
-  nh.spinOnce();
+  wait(duration);
+}
+
+void open_servo(int start_angle, int end_angle){
+  for (int pos = start_angle; pos <= end_angle; pos += 1) {
+    servo.write(pos);
+    nh.spinOnce();
+    delay(5);
+  }
+}
+
+void close_servo(int start_angle, int end_angle){
+  for (int pos = start_angle; pos >= end_angle; pos -= 1) {
+    servo.write(pos);
+    nh.spinOnce();
+    delay(5);
+  }
+}
+
+
+void flip(){
+  open_servo(open_angle, close_angle);
+  wait(3000);
+
+  ret_actuator(3000);
+  brake_actuator(2000);
+
+  //CHECK CURRENT
+
+  ret_actuator(7000);
+  brake_actuator(2000);
+
+  close_servo(close_angle, open_angle);
+  wait_blocked(2000);
+
+  ext_actuator(5000);
+  brake_actuator(2000);
 }
 
 void actuator_test(){
@@ -101,8 +139,8 @@ ros::Subscriber<std_msgs::Bool> sub("/boat_controller/flip/arduino/start", flip_
 
 void setup(){
   nh.initNode();
-  nh.subscribe(sub);
   nh.advertise(pub);
+  nh.subscribe(sub);
   
   servo.attach(9); //attach it to pin 9
   pinMode(act_ext_pin, OUTPUT);
@@ -112,6 +150,6 @@ void setup(){
 void loop(){
   nh.spinOnce();
   delay(1);
-  //flip();
   //actuator_test();
+
 }
