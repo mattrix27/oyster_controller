@@ -22,7 +22,8 @@
 #include <ros.h>
 #include <std_msgs/Bool.h>
 
-int servo_pin = 9;
+int servo_pin1 = 9;
+int servo_pin2 = 10;
 int act_ext_pin = 8;
 int act_ret_pin = 7;
 
@@ -30,7 +31,8 @@ int open_angle = 10;
 int close_angle = 170;
 
 std_msgs::Bool flipped_msg;
-Servo servo;
+Servo servo1;
+Servo servo2;
 ros::NodeHandle nh;
 ros::Publisher pub("/boat_controller/flip/arduino/done", &flipped_msg);
 
@@ -73,17 +75,27 @@ void brake_actuator(unsigned long duration){
 
 void open_servo(int start_angle, int end_angle){
   for (int pos = start_angle; pos <= end_angle; pos += 1) {
-    servo.write(pos);
+    servo1.write(pos);
+    servo2.write(180-pos);
     nh.spinOnce();
+<<<<<<< HEAD
     delay(1);
+=======
+    delay(10);
+>>>>>>> cdb984b04b70b34fa959af4c9a3c7c1b72820e15
   }
 }
 
 void close_servo(int start_angle, int end_angle){
   for (int pos = start_angle; pos >= end_angle; pos -= 1) {
-    servo.write(pos);
+    servo1.write(pos);
+    servo2.write(180-pos);
     nh.spinOnce();
+<<<<<<< HEAD
     delay(1);
+=======
+    delay(10);
+>>>>>>> cdb984b04b70b34fa959af4c9a3c7c1b72820e15
   }
 }
 
@@ -97,38 +109,30 @@ void flip(){
 
   //CHECK CURRENT
 
-  ret_actuator(7000);
+  ret_actuator(9000);
   brake_actuator(2000);
 
   close_servo(close_angle, open_angle);
   wait_blocked(2000);
 
-  ext_actuator(5000);
+  ext_actuator(9000);
   brake_actuator(2000);
 }
 
-void actuator_test(){
-  digitalWrite(act_ext_pin, HIGH);
-  digitalWrite(act_ret_pin, LOW);
-  delay(2000);
-
-  digitalWrite(act_ext_pin, HIGH);
-  digitalWrite(act_ret_pin, HIGH);
-  delay(2000);
-
-//  digitalWrite(act_ext_pin, LOW);
-//  digitalWrite(act_ret_pin, HIGH);
-//  delay(10000);
-//
-//  digitalWrite(act_ext_pin, HIGH);
-//  digitalWrite(act_ret_pin, HIGH);
-//  delay(1000);
+void reset(){
+  ext_actuator(8000);
+  close_servo(close_angle, open_angle);
 }
 
 void flip_cb( const std_msgs::Bool& cmd_msg){
-  flip();
-  
-  flipped_msg.data = true;
+  if (cmd_msg.data == true){
+    flip();
+    flipped_msg.data = true;
+  }
+  else {
+    reset();
+    flipped_msg.data = false;
+  }
   pub.publish(&flipped_msg);
   delay(1000);
 }
@@ -142,7 +146,8 @@ void setup(){
   nh.advertise(pub);
   nh.subscribe(sub);
   
-  servo.attach(9); //attach it to pin 9
+  servo1.attach(9); //attach it to pin 9
+  servo2.attach(10);
   pinMode(act_ext_pin, OUTPUT);
   pinMode(act_ret_pin, OUTPUT);
 }
