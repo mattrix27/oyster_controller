@@ -78,11 +78,7 @@ void open_servo(int start_angle, int end_angle){
     servo1.write(pos);
     servo2.write(180-pos);
     nh.spinOnce();
-<<<<<<< HEAD
-    delay(1);
-=======
     delay(10);
->>>>>>> cdb984b04b70b34fa959af4c9a3c7c1b72820e15
   }
 }
 
@@ -91,11 +87,7 @@ void close_servo(int start_angle, int end_angle){
     servo1.write(pos);
     servo2.write(180-pos);
     nh.spinOnce();
-<<<<<<< HEAD
-    delay(1);
-=======
     delay(10);
->>>>>>> cdb984b04b70b34fa959af4c9a3c7c1b72820e15
   }
 }
 
@@ -156,7 +148,4 @@ void loop(){
   nh.spinOnce();
   delay(1);
   //actuator_test();
-
-  
-
 }
