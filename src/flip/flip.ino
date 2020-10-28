@@ -75,7 +75,7 @@ void open_servo(int start_angle, int end_angle){
   for (int pos = start_angle; pos <= end_angle; pos += 1) {
     servo.write(pos);
     nh.spinOnce();
-    delay(5);
+    delay(1);
   }
 }
 
@@ -83,7 +83,7 @@ void close_servo(int start_angle, int end_angle){
   for (int pos = start_angle; pos >= end_angle; pos -= 1) {
     servo.write(pos);
     nh.spinOnce();
-    delay(5);
+    delay(1);
   }
 }
 
@@ -151,5 +151,7 @@ void loop(){
   nh.spinOnce();
   delay(1);
   //actuator_test();
+
+  
 
 }
