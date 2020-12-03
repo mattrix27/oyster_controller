@@ -21,20 +21,34 @@
 #include <Servo.h> 
 #include <ros.h>
 #include <std_msgs/Bool.h>
+#include <std_msgs/UInt16.h>
+#include <std_msgs/Float32.h>
 
 int servo_pin1 = 9;
 int servo_pin2 = 10;
+int current_pin1 = A0;
 int act_ext_pin = 8;
 int act_ret_pin = 7;
+const int RS = 10;          // Shunt resistor value (in ohms)
+const int VOLTAGE_REF = 5;  // Reference voltage for analog read
+const int CURRENT_THRES = 0.1;
+const int CURRENT_COUNTER = 0;
 
-int open_angle = 10;
-int close_angle = 170;
+// Global Variables
+float sensorValue;   // Variable to store value from analog read
+float current;
+
+int open_angle = 0;
+int close_angle = 180;
 
 std_msgs::Bool flipped_msg;
+std_msgs::Float32 current_msg;
 Servo servo1;
 Servo servo2;
 ros::NodeHandle nh;
-ros::Publisher pub("/boat_controller/flip/arduino/done", &flipped_msg);
+ros::Publisher flip_pub("/boat_controller/flip/arduino/done", &flipped_msg);
+ros::Publisher curr_pub("/boat_controller/flip/current/", &current_msg);
+
 
 void wait_blocked(int duration, int frame=1000){
   int rem_dur = duration;
@@ -78,8 +92,9 @@ void open_servo(int start_angle, int end_angle){
     servo1.write(pos);
     servo2.write(180-pos);
     nh.spinOnce();
-    delay(10);
+    delay(5);
   }
+  delay(1000);
 }
 
 void close_servo(int start_angle, int end_angle){
@@ -87,55 +102,91 @@ void close_servo(int start_angle, int end_angle){
     servo1.write(pos);
     servo2.write(180-pos);
     nh.spinOnce();
-    delay(10);
+    delay(5);
   }
 }
 
+float check_current() {
+  //CHECK CURRENT
+  sensorValue = analogRead(current_pin1);
+
+  // Remap the ADC value into a voltage number (5V reference)
+  sensorValue = (sensorValue * VOLTAGE_REF) / 1023;
+
+  // Follow the equation given by the INA169 datasheet to
+  // determine the current flowing through RS. Assume RL = 10k
+  // Is = (Vout x 1k) / (RS x RL)
+  float curr = sensorValue / (1 * RS);
+  return curr;
+}
 
 void flip(){
   open_servo(open_angle, close_angle);
-  wait(3000);
+//  delay(1000);
 
   ret_actuator(3000);
-  brake_actuator(2000);
+  brake_actuator(100);
 
-  //CHECK CURRENT
-
+//  int cnt = 0;
+//  for (int i = 0; i <= CURRENT_COUNTER; i++) {
+//    float curr = check_current();
+//    if (curr > CURRENT_THRES) {
+//      cnt++;
+//    }
+//    else {
+//      cnt = 0;
+//    }
+//    current_msg.data = curr;
+//    curr_pub.publish(&current_msg);  
+//  }
+//
+//  if (cnt == CURRENT_COUNTER) {
   ret_actuator(9000);
-  brake_actuator(2000);
+  brake_actuator(100);
 
   close_servo(close_angle, open_angle);
-  wait_blocked(2000);
 
   ext_actuator(9000);
-  brake_actuator(2000);
+  brake_actuator(100);
+//  }
+//  else {
+//    reset(1);
+//  }
 }
 
-void reset(){
-  ext_actuator(8000);
+void reset(int x){
   close_servo(close_angle, open_angle);
+  if (x == 1){
+    ext_actuator(8000); 
+  }
+  else {
+    ret_actuator(8000);
+  }
+  brake_actuator(100);
 }
 
-void flip_cb( const std_msgs::Bool& cmd_msg){
-  if (cmd_msg.data == true){
+void flip_cb( const std_msgs::UInt16& cmd_msg){
+  if (cmd_msg.data == 0){
     flip();
     flipped_msg.data = true;
   }
   else {
-    reset();
+    int x = cmd_msg.data;
+    reset(x);
     flipped_msg.data = false;
   }
-  pub.publish(&flipped_msg);
+  flip_pub.publish(&flipped_msg);
   delay(1000);
 }
 
 
-ros::Subscriber<std_msgs::Bool> sub("/boat_controller/flip/arduino/start", flip_cb);
+ros::Subscriber<std_msgs::UInt16> sub("/boat_controller/flip/arduino/start", flip_cb);
 
 
 void setup(){
   nh.initNode();
-  nh.advertise(pub);
+  nh.advertise(flip_pub);
+  nh.advertise(curr_pub);
   nh.subscribe(sub);
   
   servo1.attach(9); //attach it to pin 9
@@ -147,5 +198,5 @@ void setup(){
 void loop(){
   nh.spinOnce();
   delay(1);
-  //actuator_test();
+  
 }
