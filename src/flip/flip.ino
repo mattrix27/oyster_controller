@@ -29,6 +29,14 @@ int servo_pin2 = 10;
 int current_pin1 = A0;
 int act_ext_pin = 8;
 int act_ret_pin = 7;
+
+int buttonPin1 = 5;
+int buttonPin2 = 4;
+int buttonPin3 = 3;
+int buttonState1 = 0;
+int buttonState2 = 0;
+int buttonState3 = 0;
+
 const int RS = 10;          // Shunt resistor value (in ohms)
 const int VOLTAGE_REF = 5;  // Reference voltage for analog read
 const int CURRENT_THRES = 0.1;
@@ -37,9 +45,11 @@ const int CURRENT_COUNTER = 0;
 // Global Variables
 float sensorValue;   // Variable to store value from analog read
 float current;
+bool flipping = false;
+
 
 int open_angle = 0;
-int close_angle = 180;
+int close_angle = 140;
 
 std_msgs::Bool flipped_msg;
 std_msgs::Float32 current_msg;
@@ -121,10 +131,12 @@ float check_current() {
 }
 
 void flip(){
-  open_servo(open_angle, close_angle);
-//  delay(1000);
+//  open_servo(open_angle, close_angle);
+  servo1.write(close_angle);
+  servo2.write(180-close_angle);
+  delay(1000);
 
-  ret_actuator(3000);
+  ret_actuator(4000);
   brake_actuator(100);
 
 //  int cnt = 0;
@@ -141,13 +153,19 @@ void flip(){
 //  }
 //
 //  if (cnt == CURRENT_COUNTER) {
+
   ret_actuator(9000);
   brake_actuator(100);
 
-  close_servo(close_angle, open_angle);
+//  close_servo(close_angle, open_angle);
+  servo1.write(180-close_angle);
+  servo2.write(close_angle);
 
   ext_actuator(9000);
   brake_actuator(100);
+
+  flipping = false;
+  
 //  }
 //  else {
 //    reset(1);
@@ -156,13 +174,14 @@ void flip(){
 
 void reset(int x){
   close_servo(close_angle, open_angle);
-  if (x == 1){
+  if (x == 1){  
     ext_actuator(8000); 
   }
   else {
     ret_actuator(8000);
   }
   brake_actuator(100);
+  flipping = false;
 }
 
 void flip_cb( const std_msgs::UInt16& cmd_msg){
@@ -193,10 +212,41 @@ void setup(){
   servo2.attach(10);
   pinMode(act_ext_pin, OUTPUT);
   pinMode(act_ret_pin, OUTPUT);
+//  Serial.begin(9600);
 }
 
 void loop(){
   nh.spinOnce();
+
+  buttonState1 = digitalRead(buttonPin1);
+  buttonState2 = digitalRead(buttonPin2);
+  buttonState3 = digitalRead(buttonPin3);
+
+//  Serial.println(flipping);
+//  Serial.println(buttonState1);
+//  Serial.println(buttonState2);
+//  Serial.println(buttonState3);
+//  Serial.println(" ");
+
+  if (flipping == false) {
+    if (buttonState1 == HIGH) {
+//      Serial.println("FLIP1!");
+      flipping = true;
+      flip();
+    } else if (buttonState2 == HIGH) {
+//      Serial.println("FLIP2!");
+      flipping = true;
+      reset(1);
+    } else if (buttonState3 == HIGH) {
+//      Serial.println("FLIP3!");
+      flipping = true;
+      reset(2);
+    }
+    buttonState1 = 0;
+    buttonState2 = 0;
+    buttonState3 = 0;
+  }
+  
   delay(1);
   
 }

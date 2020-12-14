@@ -28,7 +28,7 @@ class BoatController:
 
 
         # self.drive_pub = rospy.Publisher(self.DRIVE_TOPIC, UInt16, queue_size=5)
-        self.flip_pub = rospy.Publisher(self.FLIP_START_TOPIC, Bool, queue_size=5)
+        self.flip_pub = rospy.Publisher(self.FLIP_START_TOPIC, UInt16, queue_size=5)
         self.mode_pub = rospy.Publisher(self.MODE_TOPIC, UInt16, queue_size=5)
 
         self.current_speed = 0
@@ -77,7 +77,7 @@ class BoatController:
             print("FLIPPING")
             self.flip_counter = 0
             self.MODE = 1
-            self.flip_pub.publish(True)
+            self.flip_pub.publish(0)
 
         # self.drive_pub.publish(drive_msg)
 
