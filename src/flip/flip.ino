@@ -49,7 +49,7 @@ bool flipping = false;
 
 
 int open_angle = 0;
-int close_angle = 140;
+int close_angle = 150;
 
 std_msgs::Bool flipped_msg;
 std_msgs::Float32 current_msg;
