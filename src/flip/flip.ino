@@ -132,27 +132,13 @@ float check_current() {
 
 void flip(){
 //  open_servo(open_angle, close_angle);
+  
   servo1.write(close_angle);
   servo2.write(180-close_angle);
   delay(1000);
 
   ret_actuator(4000);
   brake_actuator(100);
-
-//  int cnt = 0;
-//  for (int i = 0; i <= CURRENT_COUNTER; i++) {
-//    float curr = check_current();
-//    if (curr > CURRENT_THRES) {
-//      cnt++;
-//    }
-//    else {
-//      cnt = 0;
-//    }
-//    current_msg.data = curr;
-//    curr_pub.publish(&current_msg);  
-//  }
-//
-//  if (cnt == CURRENT_COUNTER) {
 
   ret_actuator(9000);
   brake_actuator(100);
@@ -185,6 +171,8 @@ void reset(int x){
 }
 
 void flip_cb( const std_msgs::UInt16& cmd_msg){
+  digitalWrite(LED_BUILTIN, HIGH);   // turn the LED on (HIGH is the voltage level)
+  delay(1000);
   if (cmd_msg.data == 0){
     flip();
     flipped_msg.data = true;
@@ -195,6 +183,7 @@ void flip_cb( const std_msgs::UInt16& cmd_msg){
     flipped_msg.data = false;
   }
   flip_pub.publish(&flipped_msg);
+  digitalWrite(LED_BUILTIN, LOW);    // turn the LED off by making the voltage LOW
   delay(1000);
 }
 
@@ -207,7 +196,8 @@ void setup(){
   nh.advertise(flip_pub);
   nh.advertise(curr_pub);
   nh.subscribe(sub);
-  
+
+  pinMode(LED_BUILTIN, OUTPUT);
   servo1.attach(9); //attach it to pin 9
   servo2.attach(10);
   pinMode(act_ext_pin, OUTPUT);
