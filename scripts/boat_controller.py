@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import numpy as np
 import rospy
@@ -77,7 +77,7 @@ class BoatController:
 	#TODO PULSE
 
     def rc_command_callback(self, data):
-	if (self.MODE != 3):
+        if (self.MODE != 3):
             print("COMMAND: ", data.data)
             if (data.data == 3):
                 self.flip_pub.publish(0)
