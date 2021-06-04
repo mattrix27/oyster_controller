@@ -30,8 +30,8 @@ As a ROS node, the main variables for configuring are set in the [params.yaml](p
 4: FLIPPED, Once a bag gets flipped, we need to then move forward to the potential next bag, or exit the row. 
 **TODO: give an arbitrary error/command to move forward a certain amount to move past already flipped bag. Once this is implemented, move to mode ROW CHECK.**
 
-5: ROW CHECK, Listen to data from the bottom-facing camera to see if there is a possible bag. If so, go back to ALIGN, if not, assume that we hit a break in the row or exited teh row, switch to, 
+5: ROW CHECK, Listen to data from the bottom-facing camera to see if there is a possible bag. If so, go back to ALIGN, if not, assume that we hit a break in the row or exited the row, switch back to FRONT. 
 
-6. TURN, When there are no bags in front, the boat must do a turn manuever to turn around and see array again. Should then use localization data (TODO) to determine where it should re-enter the array. 
+6: TURN, When there are no bags in front, the boat must do a turn manuever to turn around and see array again. Should then use localization data (TODO) to determine where it should re-enter the array. 
 
-7. FINISHED, when we recognize that we enter and then finish the last row, go to a idle form.
+7: FINISHED, when we recognize that we enter and then finish the last row, go to a idle form.
