@@ -28,7 +28,7 @@ As a ROS node, the main variables for configuring are set in the [params.yaml](p
 3: FLIP, Publishes a message that gets sent to the Arduino, which runs the flipping process, then sends a ROS message back, which oyster_controller subscribes to then register and switch to mode 4.
 
 4: FLIPPED, Once a bag gets flipped, we need to then move forward to the potential next bag, or exit the row. 
-### TODO: give an arbitrary error/command to move forward a certain amount to move past already flipped bag. Once this is implemented, move to mode ROW CHECK.
+**TODO: give an arbitrary error/command to move forward a certain amount to move past already flipped bag. Once this is implemented, move to mode ROW CHECK.**
 
 5: ROW CHECK, Listen to data from the bottom-facing camera to see if there is a possible bag. If so, go back to ALIGN, if not, assume that we hit a break in the row or exited teh row, switch to, 
 
